@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { 
   Volume2, VolumeX, Music, Music2, Mic, MicOff, 
   Pause, Play, RotateCcw, Home, SkipForward,
-  Sparkles
+  Sparkles, Keyboard
 } from "lucide-react"
 
 interface TetrisGameProps {
@@ -29,6 +29,16 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
   const [isPaused, setIsPaused] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [particleTrigger, setParticleTrigger] = useState<"word-complete" | "streak" | "level-up" | "game-over" | null>(null)
+  const [typedWord, setTypedWord] = useState("")
+
+  // Reset typed word when target word changes
+  const prevTargetWordRef = useRef(gameState.targetWord.word)
+  useEffect(() => {
+    if (gameState.targetWord.word !== prevTargetWordRef.current) {
+      setTypedWord("")
+      prevTargetWordRef.current = gameState.targetWord.word
+    }
+  }, [gameState.targetWord.word])
 
   const prevWordsCompletedRef = useRef(gameState.wordsCompleted)
   const prevStreakRef = useRef(gameState.streak)
@@ -95,6 +105,25 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
       }
       if (isPaused && event.key.toLowerCase() !== "p") return
 
+      // Handle letter typing for word completion
+      if (event.key.length === 1 && /[a-zA-Z]/.test(event.key)) {
+        event.preventDefault()
+        const letter = event.key.toLowerCase()
+        const target = gameState.targetWord.word.toLowerCase()
+        const nextTyped = typedWord + letter
+        if (target.startsWith(nextTyped)) {
+          setTypedWord(nextTyped)
+          if (audioEnabled) audio.playPieceMove()
+          if (nextTyped === target) {
+            setTypedWord("")
+            actions.completeTargetWord()
+          }
+        } else {
+          setTypedWord("")
+        }
+        return
+      }
+
       switch (event.key) {
         case "ArrowLeft":
           event.preventDefault()
@@ -127,6 +156,7 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
         case "r":
         case "R":
           event.preventDefault()
+          setTypedWord("")
           actions.resetGame()
           break
         case "m":
@@ -136,7 +166,7 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
           break
       }
     },
-    [gameState.gameOver, isPaused, actions, audioEnabled, audio, music],
+    [gameState.gameOver, gameState.targetWord.word, gameState.streak, isPaused, typedWord, actions, audioEnabled, audio, music],
   )
 
   useEffect(() => {
@@ -270,7 +300,7 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
 
             {/* Reset */}
             <Button
-              onClick={actions.resetGame}
+              onClick={() => { setTypedWord(""); actions.resetGame() }}
               variant="outline"
               size="sm"
               className="bg-rose-600/80 border-rose-500 hover:bg-rose-500 text-white backdrop-blur-sm transition-all duration-300"
@@ -288,6 +318,36 @@ export function TetrisGame({ difficulty, onBackToMenu }: TetrisGameProps) {
               <Home className="w-4 h-4 mr-1.5" />
               Menu
             </Button>
+          </div>
+        </div>
+
+        {/* Typing Word Display */}
+        <div className="mb-4 flex justify-center">
+          <div className="glass-dark rounded-xl px-6 py-3 border border-amber-400/30 select-none">
+            <div className="flex items-center gap-1 text-2xl font-mono tracking-[0.2em] justify-center">
+              <Keyboard className="w-4 h-4 text-amber-400/60 mr-2" />
+              {gameState.targetWord.word.toUpperCase().split("").map((letter, i) => {
+                const isTyped = i < typedWord.length
+                const isCurrent = i === typedWord.length
+                return (
+                  <span
+                    key={i}
+                    className={`transition-all duration-150 ${
+                      isTyped
+                        ? "text-emerald-400 scale-110"
+                        : isCurrent
+                        ? "text-amber-300 animate-pulse"
+                        : "text-white/30"
+                    }`}
+                  >
+                    {letter}
+                  </span>
+                )
+              })}
+            </div>
+            <div className="text-[10px] text-white/40 text-center mt-1 uppercase tracking-wider">
+              {typedWord.length === 0 ? "Type the word to clear it" : `${typedWord.length} / ${gameState.targetWord.word.length}`}
+            </div>
           </div>
         </div>
 

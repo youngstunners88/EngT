@@ -13,7 +13,7 @@ import { useBackgroundMusic } from "@/hooks/use-background-music"
 import { Button } from "@/components/ui/button"
 import { 
   Volume2, VolumeX, Music, Music2, Mic, MicOff, 
-  Home, RotateCcw, SkipForward, Sparkles
+  Home, RotateCcw, SkipForward, Sparkles, Keyboard
 } from "lucide-react"
 
 interface MobileTetrisGameProps {
@@ -29,6 +29,7 @@ export function MobileTetrisGame({ difficulty, onBackToMenu }: MobileTetrisGameP
   const [isPaused, setIsPaused] = useState(false)
   const [audioEnabled, setAudioEnabled] = useState(true)
   const [particleTrigger, setParticleTrigger] = useState<"word-complete" | "streak" | "level-up" | "game-over" | null>(null)
+  const [typedWord, setTypedWord] = useState("")
 
   const prevWordsCompletedRef = useRef(gameState.wordsCompleted)
   const prevStreakRef = useRef(gameState.streak)
@@ -81,6 +82,38 @@ export function MobileTetrisGame({ difficulty, onBackToMenu }: MobileTetrisGameP
     }
     prevGameOverRef.current = gameState.gameOver
   }, [gameState.gameOver, gameState.learnedWords.length, voice])
+
+  // Reset typed word when target word changes
+  const prevTargetWordRef = useRef(gameState.targetWord.word)
+  useEffect(() => {
+    if (gameState.targetWord.word !== prevTargetWordRef.current) {
+      setTypedWord("")
+      prevTargetWordRef.current = gameState.targetWord.word
+    }
+  }, [gameState.targetWord.word])
+
+  // Keyboard typing handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameState.gameOver || isPaused) return
+      if (e.key.length === 1 && /[a-zA-Z]/.test(e.key)) {
+        const letter = e.key.toLowerCase()
+        const target = gameState.targetWord.word.toLowerCase()
+        const nextTyped = typedWord + letter
+        if (target.startsWith(nextTyped)) {
+          setTypedWord(nextTyped)
+          if (nextTyped === target) {
+            setTypedWord("")
+            actions.completeTargetWord()
+          }
+        } else {
+          setTypedWord("")
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [gameState.gameOver, gameState.targetWord.word, isPaused, typedWord, actions])
 
   // Line clear effect
   useEffect(() => {
@@ -216,6 +249,33 @@ export function MobileTetrisGame({ difficulty, onBackToMenu }: MobileTetrisGameP
           </div>
         </div>
 
+        {/* Typing Word Display */}
+        <div className="mb-3 flex justify-center">
+          <div className="glass-dark rounded-lg px-4 py-2 border border-amber-400/30 select-none">
+            <div className="flex items-center gap-1 text-lg font-mono tracking-[0.2em] justify-center">
+              <Keyboard className="w-3.5 h-3.5 text-amber-400/60 mr-1" />
+              {gameState.targetWord.word.toUpperCase().split("").map((letter, i) => {
+                const isTyped = i < typedWord.length
+                const isCurrent = i === typedWord.length
+                return (
+                  <span
+                    key={i}
+                    className={`transition-all duration-150 ${
+                      isTyped
+                        ? "text-emerald-400 scale-110"
+                        : isCurrent
+                        ? "text-amber-300 animate-pulse"
+                        : "text-white/30"
+                    }`}
+                  >
+                    {letter}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* Game Board */}
         <div className="mb-4">
           <MobileGameBoard
@@ -268,7 +328,7 @@ export function MobileTetrisGame({ difficulty, onBackToMenu }: MobileTetrisGameP
 
         {/* Reset */}
         <Button 
-          onClick={actions.resetGame} 
+          onClick={() => { setTypedWord(""); actions.resetGame() }} 
           className="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white shadow-lg transition-all duration-300" 
           size="lg"
         >

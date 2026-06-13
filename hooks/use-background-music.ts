@@ -30,26 +30,29 @@ export function useBackgroundMusic(initialVolume = 0.3): BackgroundMusicApi {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTrack, setCurrentTrack] = useState(0)
   const [volume, setVolumeState] = useState(initialVolume)
+  const currentTrackRef = useRef(0)
+  const isPlayingRef = useRef(false)
+
+  // Keep refs in sync
+  useEffect(() => { currentTrackRef.current = currentTrack }, [currentTrack])
+  useEffect(() => { isPlayingRef.current = isPlaying }, [isPlaying])
 
   // Initialize audio element
   useEffect(() => {
     if (typeof window === "undefined") return
 
     const audio = new Audio()
-    audio.loop = true
+    audio.loop = false
     audio.volume = initialVolume
     audio.preload = "auto"
     audioRef.current = audio
-
-    // Load the first track
     audio.src = MUSIC_TRACKS[0]
 
-    // Handle track end - move to next track
     const handleEnded = () => {
-      const nextIndex = (currentTrack + 1) % MUSIC_TRACKS.length
+      const nextIndex = (currentTrackRef.current + 1) % MUSIC_TRACKS.length
       setCurrentTrack(nextIndex)
       audio.src = MUSIC_TRACKS[nextIndex]
-      if (isPlaying) {
+      if (isPlayingRef.current) {
         audio.play().catch(console.warn)
       }
     }
@@ -66,11 +69,8 @@ export function useBackgroundMusic(initialVolume = 0.3): BackgroundMusicApi {
   // Update audio source when track changes
   useEffect(() => {
     if (!audioRef.current) return
-    
-    const wasPlaying = isPlaying
     audioRef.current.src = MUSIC_TRACKS[currentTrack]
-    
-    if (wasPlaying) {
+    if (isPlaying) {
       audioRef.current.play().catch(console.warn)
     }
   }, [currentTrack])
