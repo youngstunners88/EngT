@@ -1,0 +1,40 @@
+import type { WordData } from "@/types/game"
+
+export const WORD_LISTS: Record<"easy" | "medium" | "hard", WordData[]> = {
+  easy: [
+    { id: "1", word: "cat", definition: "A small domesticated carnivorous mammal" },
+    { id: "2", word: "dog", definition: "A domesticated carnivorous mammal" },
+    { id: "3", word: "sun", definition: "The star around which the earth orbits" },
+    { id: "4", word: "moon", definition: "The natural satellite of the earth" },
+    { id: "5", word: "tree", definition: "A woody perennial plant" },
+    { id: "6", word: "book", definition: "A written or printed work consisting of pages" },
+    { id: "7", word: "fish", definition: "A limbless cold-blooded vertebrate animal" },
+    { id: "8", word: "bird", definition: "A warm-blooded egg-laying vertebrate" },
+    { id: "9", word: "car", definition: "A road vehicle, typically with four wheels" },
+    { id: "10", word: "home", definition: "The place where one lives permanently" },
+  ],
+  medium: [
+    { id: "11", word: "happy", definition: "Feeling or showing pleasure or contentment" },
+    { id: "12", word: "water", definition: "A colorless, transparent, odorless liquid" },
+    { id: "13", word: "music", definition: "Vocal or instrumental sounds combined" },
+    { id: "14", word: "friend", definition: "A person whom one knows and likes" },
+    { id: "15", word: "school", definition: "An institution for educating children" },
+    { id: "16", word: "garden", definition: "A piece of ground for growing plants" },
+    { id: "17", word: "family", definition: "A group consisting of parents and children" },
+    { id: "18", word: "nature", definition: "The physical world collectively" },
+    { id: "19", word: "travel", definition: "Go from one place to another" },
+    { id: "20", word: "ocean", definition: "A very large expanse of sea" },
+  ],
+  hard: [
+    { id: "21", word: "beautiful", definition: "Pleasing the senses or mind aesthetically" },
+    { id: "22", word: "knowledge", definition: "Facts, information, and skills acquired" },
+    { id: "23", word: "adventure", definition: "An unusual and exciting experience" },
+    { id: "24", word: "creative", definition: "Relating to or involving imagination" },
+    { id: "25", word: "peaceful", definition: "Free from disturbance; tranquil" },
+    { id: "26", word: "strength", definition: "The quality or state of being strong" },
+    { id: "27", word: "wisdom", definition: "The quality of having experience and knowledge" },
+    { id: "28", word: "freedom", definition: "The power or right to act, speak, or think" },
+    { id: "29", word: "courage", definition: "The ability to do something that frightens one" },
+    { id: "30", word: "mystery", definition: "Something that is difficult to understand" },
+  ],
+}
